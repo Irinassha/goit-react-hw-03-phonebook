@@ -14,7 +14,20 @@ export class App extends React.Component {
     ],
     filter: '',
   };
-  
+
+  componentDidMount() {
+    const LocalContacts = localStorage.getItem('Contacts');
+    if (LocalContacts) {
+      this.setState({ contacts: JSON.parse(LocalContacts) });
+    }
+  }
+
+  componentDidUpdate(_, prevState) {
+    if (prevState.contacts.length !== this.state.contacts.length) {
+      localStorage.setItem('Contacts', JSON.stringify(this.state.contacts));
+    }
+  }
+
   handlerDeleteContact = id => {
     this.setState(prevState => ({
       contacts: prevState.contacts.filter(item => item.id !== id),
@@ -32,23 +45,25 @@ export class App extends React.Component {
   };
 
   handlerAddNameNumber = option => {
-    const {name, number} = option
+    const { contacts } = this.state;
+    const { name, number } = option;
     const newObject = {
       id: nanoid(),
       name: name,
       number: number,
     };
 
-    const isExist = this.state.contacts.find(
+    const isExist = contacts.find(
       item => item.name.toLowerCase() === name.toLowerCase()
     );
 
     if (isExist) {
       return alert(`${name} is already in contacts`);
     }
-    
+
     this.setState(prevState => ({
-      contacts: [...this.state.contacts, newObject],
+      contacts: [...contacts, newObject],
+      localContact: true,
     }));
   };
 
@@ -67,12 +82,12 @@ export class App extends React.Component {
         }}
       >
         <h1>Phonebook</h1>
-        <ContactForm contacts={contacts} addNameNumber={this.handlerAddNameNumber} />
-        <h2>Find contact by name</h2>
-        <Filter
-          filter={filter}
-          filterName={this.handlerFilterName}
+        <ContactForm
+          contacts={contacts}
+          addNameNumber={this.handlerAddNameNumber}
         />
+        <h2>Find contact by name</h2>
+        <Filter filter={filter} filterName={this.handlerFilterName} />
         <ContactList
           contacts={filterContacts}
           onLeaveFeedback={this.handlerDeleteContact}
